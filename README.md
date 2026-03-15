@@ -25,3 +25,8 @@ Tools Used:
 - Industry Data
 
 Folder: Airline_Market_Concentration_Analysis
+### 2. Crime and Economic Indicators Correlation Analysis
+Statistical analysis examining the relationship between organized crime and economic indicators such as GDP, exports, and imports using correlation and covariance methods.
+
+Tools Used:
+Excel | Statistical Analysis | Data Visualization
