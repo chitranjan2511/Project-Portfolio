@@ -23,9 +23,6 @@ Patients waste ~2 hours per visit due to:
 - SAM: ₹30 Cr
 - SOM: ₹1.5–3 Cr
 
-## 🖥️ Prototype
-Open: `prototype/Easy_Q_Prototype.html`
-
 ## 📄 Documentation
 See: `docs/EasyQ_Project_Presentation.pdf`
 
