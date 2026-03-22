@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EASY-Q · Skip the Line, Save the Time</title>
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Cabinet+Grotesk:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #080C14;
+  --bg2: #0D1320;
+  --bg3: #111827;
+  --glass: rgba(255,255,255,0.04);
+  --glass2: rgba(255,255,255,0.07);
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.13);
+  --accent: #3B6FFF;
+  --accent2: #5B8FFF;
+  --accent-glow: rgba(59,111,255,0.35);
+  --teal: #00D4AA;
+  --teal-glow: rgba(0,212,170,0.3);
+  --amber: #FFB347;
+  --amber-glow: rgba(255,179,71,0.3);
+  --rose: #FF6B8A;
+  --rose-glow: rgba(255,107,138,0.3);
+  --text: #F0F4FF;
+  --text2: #8896B3;
+  --text3: #4A5878;
+  --r: 16px;
+  --r2: 20px;
+  --font-display: 'Clash Display', sans-serif;
+  --font-body: 'Cabinet Grotesk', sans-serif;
+}
+
+html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--font-body); }
+
+/* ══════════════════════════════════════
+   AMBIENT BACKGROUND
+══════════════════════════════════════ */
+.ambient {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  overflow: hidden;
+}
+.orb {
+  position: absolute; border-radius: 50%;
+  filter: blur(80px); opacity: 0.25;
+  animation: drift 18s ease-in-out infinite alternate;
+}
+.orb1 { width:500px;height:500px; background:var(--accent); top:-150px;left:-100px; animation-duration:20s; }
+.orb2 { width:400px;height:400px; background:var(--teal); bottom:-100px;right:-80px; animation-duration:15s; }
+.orb3 { width:300px;height:300px; background:var(--rose); top:40%;right:15%; animation-duration:25s; opacity:0.12; }
+
+@keyframes drift {
+  from { transform: translate(0,0) scale(1); }
+  to   { transform: translate(40px,30px) scale(1.1); }
+}
+
+/* ══════════════════════════════════════
+   LAYOUT
+══════════════════════════════════════ */
+.shell {
+  position: relative; z-index: 1;
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  grid-template-rows: 1fr;
+  height: 100vh;
+}
+
+/* ══════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════ */
+.sidebar {
+  background: rgba(8,12,20,0.8);
+  border-right: 1px solid var(--border);
+  backdrop-filter: blur(20px);
+  display: flex; flex-direction: column;
+  align-items: center; padding: 24px 0;
+  gap: 6px;
+}
+
+.logo {
+  width: 44px; height: 44px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--teal));
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-weight: 700; font-size: 14px;
+  color: white; margin-bottom: 24px; cursor: pointer;
+  box-shadow: 0 0 20px var(--accent-glow);
+  transition: transform .2s, box-shadow .2s;
+}
+.logo:hover { transform: scale(1.05); box-shadow: 0 0 30px var(--accent-glow); }
+
+.snav { display:flex;flex-direction:column;gap:4px;flex:1;width:100%;align-items:center; }
+
+.si {
+  width: 48px; height: 48px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all .2s; position: relative;
+  color: var(--text3); font-size: 20px;
+}
+.si:hover { background: var(--glass2); color: var(--text2); }
+.si.on {
+  background: linear-gradient(135deg, rgba(59,111,255,.2), rgba(0,212,170,.1));
+  color: var(--accent2);
+  box-shadow: inset 0 0 0 1px rgba(59,111,255,.3);
+}
+.si .tip {
+  position:absolute; left:58px; background:rgba(13,19,32,.95); border:1px solid var(--border2);
+  color:var(--text); padding:5px 12px; border-radius:8px; font-size:12px; font-weight:500;
+  white-space:nowrap; opacity:0; pointer-events:none; transition:opacity .15s; z-index:999;
+}
+.si:hover .tip { opacity:1; }
+
+.sbottom { display:flex;flex-direction:column;align-items:center;gap:8px; }
+
+.avatar {
+  width:38px;height:38px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--teal));
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:white;cursor:pointer;
+  box-shadow:0 0 12px var(--accent-glow);
+}
+
+/* ══════════════════════════════════════
+   VIEW CONTAINER
+══════════════════════════════════════ */
+.views { overflow: hidden; position: relative; }
+
+.view {
+  display: none; flex-direction: column;
+  height: 100vh; overflow-y: auto;
+  scrollbar-width: thin; scrollbar-color: var(--border2) transparent;
+}
+.view.on { display: flex; animation: viewIn .35s ease forwards; }
+
+@keyframes viewIn {
+  from { opacity:0; transform: translateY(12px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+/* ══════════════════════════════════════
+   TOPBAR
+══════════════════════════════════════ */
+.topbar {
+  padding: 28px 36px 0;
+  display: flex; align-items: flex-start; justify-content: space-between;
+  flex-shrink: 0; gap: 16px;
+}
+.ttitle {
+  font-family: var(--font-display); font-size: 26px; font-weight: 600;
+  color: var(--text); letter-spacing: -.3px;
+}
+.tsub { font-size: 13px; color: var(--text2); margin-top: 3px; }
+.tright { display:flex;align-items:center;gap:10px;flex-shrink:0;margin-top:4px; }
+
+/* ══════════════════════════════════════
+   BUTTONS
+══════════════════════════════════════ */
+.btn {
+  padding: 9px 18px; border-radius: 10px; font-size: 13px; font-weight: 600;
+  border: none; cursor: pointer; transition: all .2s; font-family: var(--font-body);
+  letter-spacing: .1px;
+}
+.btn-p {
+  background: linear-gradient(135deg, var(--accent), #5579FF);
+  color: white; box-shadow: 0 4px 14px var(--accent-glow);
+}
+.btn-p:hover { transform: translateY(-1px); box-shadow: 0 6px 20px var(--accent-glow); }
+.btn-g {
+  background: var(--glass2); color: var(--text2);
+  border: 1px solid var(--border2);
+}
+.btn-g:hover { background: var(--glass); color: var(--text); }
+
+/* ══════════════════════════════════════
+   CONTENT AREA
+══════════════════════════════════════ */
+.content { padding: 24px 36px 40px; flex:1; }
+
+/* ══════════════════════════════════════
+   GLASS CARD
+══════════════════════════════════════ */
+.gcard {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: var(--r2);
+  padding: 24px;
+  backdrop-filter: blur(12px);
+  transition: border-color .2s;
+}
+.gcard:hover { border-color: var(--border2); }
+.gcard-sm { padding: 18px 20px; }
+
+/* ══════════════════════════════════════
+   STAT CARDS
+══════════════════════════════════════ */
+.stats { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
+
+.scard {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: var(--r2); padding: 22px;
+  position: relative; overflow: hidden;
+  transition: transform .2s, border-color .2s;
+}
+.scard:hover { transform: translateY(-2px); border-color: var(--border2); }
+
+.scard::before {
+  content:''; position:absolute; top:0;right:0;
+  width:90px;height:90px; border-radius:0 20px 0 90px;
+  opacity:.15;
+}
+.scard.ac::before { background:var(--accent); }
+.scard.tc::before { background:var(--teal); }
+.scard.am::before { background:var(--amber); }
+.scard.ro::before { background:var(--rose); }
+
+.scard-icon {
+  width:40px;height:40px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;margin-bottom:14px;
+}
+.scard-icon.ac { background:rgba(59,111,255,.15); }
+.scard-icon.tc { background:rgba(0,212,170,.15); }
+.scard-icon.am { background:rgba(255,179,71,.15); }
+.scard-icon.ro { background:rgba(255,107,138,.15); }
+
+.scard-val {
+  font-family:var(--font-display); font-size:32px; font-weight:600;
+  color:var(--text); line-height:1;
+}
+.scard-label { font-size:12px; color:var(--text2); margin-top:5px; }
+.scard-change { font-size:11px; font-weight:600; margin-top:8px; }
+.up { color:var(--teal); } .dn { color:var(--rose); }
+
+/* ══════════════════════════════════════
+   GRID LAYOUTS
+══════════════════════════════════════ */
+.g2 { display:grid;grid-template-columns:1fr 1fr;gap:16px; }
+.g3 { display:grid;grid-template-columns:1.6fr 1fr;gap:16px; }
+.g21 { display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px; }
+.gcol { display:flex;flex-direction:column;gap:16px; }
+
+/* ══════════════════════════════════════
+   LIVE PULSE
+══════════════════════════════════════ */
+.live-badge {
+  display:inline-flex;align-items:center;gap:7px;
+  background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.25);
+  border-radius:99px; padding:6px 14px;
+  font-size:12px;font-weight:600;color:var(--teal);
+}
+.live-dot {
+  width:7px;height:7px;border-radius:50%;background:var(--teal);
+  animation:livepulse 1.4s ease infinite;
+}
+@keyframes livepulse {
+  0%,100%{ box-shadow:0 0 0 0 var(--teal-glow); }
+  50%{ box-shadow:0 0 0 5px transparent; }
+}
+
+/* ══════════════════════════════════════
+   SECTION HEADER
+══════════════════════════════════════ */
+.shd { display:flex;align-items:center;justify-content:space-between;margin-bottom:16px; }
+.stitle { font-family:var(--font-display);font-size:15px;font-weight:600;color:var(--text); }
+.slink { font-size:12px;color:var(--accent2);cursor:pointer;font-weight:500;transition:color .2s; }
+.slink:hover { color:var(--text); }
+
+/* ══════════════════════════════════════
+   QUEUE TABLE
+══════════════════════════════════════ */
+.qt { width:100%;border-collapse:collapse; }
+.qt th {
+  text-align:left; font-size:10.5px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.8px;
+  color:var(--text3);padding:0 14px 12px;
+  border-bottom:1px solid var(--border);
+}
+.qt td {
+  padding:13px 14px; font-size:13px;
+  border-bottom:1px solid var(--border);
+  vertical-align:middle; transition:background .15s;
+}
+.qt tr:last-child td { border-bottom:none; }
+.qt tbody tr:hover td { background:var(--glass2); }
+
+.tok {
+  font-family:var(--font-display);font-weight:600;font-size:13px;
+  color:var(--accent2);
+  background:rgba(59,111,255,.12);
+  border:1px solid rgba(59,111,255,.2);
+  padding:3px 9px;border-radius:7px;
+  display:inline-block;
+}
+
+/* ══════════════════════════════════════
+   STATUS PILLS
+══════════════════════════════════════ */
+.pill {
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 10px;border-radius:99px;font-size:11.5px;font-weight:600;
+}
+.pill::before { content:'';width:5px;height:5px;border-radius:50%; }
+
+.pill-wait { background:rgba(255,179,71,.12);color:var(--amber);border:1px solid rgba(255,179,71,.2); }
+.pill-wait::before { background:var(--amber); }
+.pill-now { background:rgba(59,111,255,.12);color:var(--accent2);border:1px solid rgba(59,111,255,.25); }
+.pill-now::before { background:var(--accent2);animation:blink 1.2s infinite; }
+.pill-done { background:rgba(0,212,170,.1);color:var(--teal);border:1px solid rgba(0,212,170,.2); }
+.pill-done::before { background:var(--teal); }
+.pill-skip { background:rgba(255,107,138,.1);color:var(--rose);border:1px solid rgba(255,107,138,.2); }
+.pill-skip::before { background:var(--rose); }
+
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:.3} }
+
+/* ══════════════════════════════════════
+   BAR CHART
+══════════════════════════════════════ */
+.barchart { display:flex;flex-direction:column;gap:10px; }
+.brow { display:flex;align-items:center;gap:10px; }
+.blbl { font-size:11px;color:var(--text3);width:28px;text-align:right;flex-shrink:0; }
+.btrack { flex:1;background:var(--glass2);border-radius:99px;height:6px;overflow:hidden; }
+.bfill {
+  height:100%;border-radius:99px;
+  background:linear-gradient(90deg,var(--accent),var(--teal));
+  transition:width 1.2s cubic-bezier(.22,1,.36,1);
+}
+.bval { font-size:11px;color:var(--text2);width:24px;font-weight:600; }
+
+/* ══════════════════════════════════════
+   PATIENT HERO
+══════════════════════════════════════ */
+.phero {
+  border-radius: var(--r2); padding: 32px;
+  position: relative; overflow: hidden; margin-bottom: 18px;
+  background: linear-gradient(135deg, rgba(59,111,255,.18) 0%, rgba(0,212,170,.1) 100%);
+  border: 1px solid rgba(59,111,255,.25);
+}
+.phero-mesh {
+  position:absolute;inset:0;
+  background: radial-gradient(ellipse at 10% 50%, rgba(59,111,255,.25) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 20%, rgba(0,212,170,.15) 0%, transparent 50%);
+}
+.phero-content { position:relative;z-index:1;display:flex;align-items:flex-end;gap:40px; }
+
+.qnum {
+  font-family:var(--font-display);font-size:96px;font-weight:700;
+  color:white;line-height:.9;text-shadow:0 0 40px rgba(59,111,255,.5);
+}
+.qnum small {
+  font-size:14px;font-weight:400;color:rgba(255,255,255,.6);
+  display:block;margin-bottom:8px;letter-spacing:.5px;text-transform:uppercase;
+}
+
+.qbadges { display:flex;gap:12px;flex-wrap:wrap; }
+
+.qbadge {
+  background:rgba(255,255,255,.08);backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:12px;padding:12px 18px;
+}
+.qbadge .lbl { font-size:11px;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px; }
+.qbadge .val { font-family:var(--font-display);font-size:22px;font-weight:600;color:white; }
+
+/* ══════════════════════════════════════
+   JOURNEY TRACK
+══════════════════════════════════════ */
+.journey {
+  display:flex;align-items:center;
+  padding:20px 24px; background:var(--glass);
+  border:1px solid var(--border);border-radius:var(--r2);
+  margin-bottom:18px;gap:0;
+}
+.jstep { flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;position:relative; }
+.jstep:not(:last-child)::after {
+  content:'';position:absolute;top:18px;left:50%;width:100%;height:2px;
+  background:var(--border);z-index:0;
+}
+.jstep.done:not(:last-child)::after { background:linear-gradient(90deg,var(--accent),var(--teal)); }
+
+.jdot {
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;background:var(--bg3);
+  border:2px solid var(--border2);
+  z-index:1;position:relative;color:var(--text3);
+  transition:all .3s;
+}
+.jstep.done .jdot {
+  background:linear-gradient(135deg,var(--accent),var(--teal));
+  border-color:transparent;color:white;
+  box-shadow:0 0 16px var(--accent-glow);
+}
+.jstep.active .jdot {
+  background:var(--accent);border-color:transparent;color:white;
+  box-shadow:0 0 0 6px rgba(59,111,255,.2),0 0 20px var(--accent-glow);
+  animation:jring 2s infinite;
+}
+@keyframes jring {
+  0%,100%{ box-shadow:0 0 0 6px rgba(59,111,255,.2),0 0 20px var(--accent-glow); }
+  50%{ box-shadow:0 0 0 10px rgba(59,111,255,.05),0 0 30px var(--accent-glow); }
+}
+.jlbl { font-size:11px;color:var(--text3);font-weight:500; }
+.jstep.done .jlbl,.jstep.active .jlbl { color:var(--accent2); }
+
+/* ══════════════════════════════════════
+   NEARBY LIST
+══════════════════════════════════════ */
+.nearby { display:flex;flex-direction:column;gap:6px; }
+.nitem {
+  display:flex;align-items:center;gap:12px;
+  padding:11px 14px;border-radius:12px;
+  background:var(--glass);border:1px solid var(--border);
+  transition:all .2s;
+}
+.nitem:hover { border-color:var(--border2);background:var(--glass2); }
+.nitem.me {
+  background:rgba(59,111,255,.1);
+  border:1px solid rgba(59,111,255,.3);
+}
+.nnum { font-family:var(--font-display);font-weight:700;font-size:15px;color:var(--text3);width:30px; }
+.nitem.me .nnum { color:var(--accent2); }
+.nname { flex:1;font-size:13px;font-weight:500;color:var(--text2); }
+.nitem.me .nname { color:var(--text); }
+.nwait { font-size:11px;color:var(--text3); }
+
+/* ══════════════════════════════════════
+   NOTIFICATIONS
+══════════════════════════════════════ */
+.notifs { display:flex;flex-direction:column;gap:10px; }
+.nnotif {
+  display:flex;gap:12px;padding:13px 14px;
+  border-radius:12px;background:var(--glass);
+  border:1px solid var(--border);border-left:3px solid transparent;
+  transition:all .2s;
+}
+.nnotif:hover { background:var(--glass2);border-color:var(--border2);border-left-color:inherit; }
+.nnotif.ac { border-left-color:var(--accent2); }
+.nnotif.tc { border-left-color:var(--teal); }
+.nnotif.am { border-left-color:var(--amber); }
+
+.nnotif-icon {
+  width:34px;height:34px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;flex-shrink:0;
+}
+.nnotif-icon.ac { background:rgba(59,111,255,.15); }
+.nnotif-icon.tc { background:rgba(0,212,170,.12); }
+.nnotif-icon.am { background:rgba(255,179,71,.12); }
+
+.nnotif-title { font-size:13px;font-weight:600;color:var(--text); }
+.nnotif-desc { font-size:11.5px;color:var(--text2);margin-top:2px; }
+.nnotif-time { font-size:10.5px;color:var(--text3);flex-shrink:0;margin-top:2px; }
+
+/* ══════════════════════════════════════
+   TABS
+══════════════════════════════════════ */
+.tabs {
+  display:flex;background:var(--glass);
+  border:1px solid var(--border);border-radius:10px;
+  padding:3px;width:fit-content;margin-bottom:18px;
+}
+.tab {
+  padding:6px 14px;border-radius:8px;
+  font-size:12.5px;font-weight:600;cursor:pointer;
+  transition:all .2s;border:none;background:none;
+  color:var(--text3);font-family:var(--font-body);
+}
+.tab.on { background:var(--glass2);color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,.3); }
+
+/* ══════════════════════════════════════
+   BOOKING FORM
+══════════════════════════════════════ */
+.fg { display:flex;flex-direction:column;gap:6px;margin-bottom:14px; }
+.fgrow { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
+.flbl { font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text3); }
+.finput, .fsel {
+  padding:11px 14px;border-radius:10px;
+  border:1px solid var(--border2);background:var(--glass);
+  font-size:13px;font-family:var(--font-body);color:var(--text);
+  outline:none;transition:border-color .2s,box-shadow .2s;
+}
+.finput::placeholder { color:var(--text3); }
+.finput:focus,.fsel:focus {
+  border-color:rgba(59,111,255,.5);
+  box-shadow:0 0 0 3px rgba(59,111,255,.1);
+}
+.fsel option { background:var(--bg2);color:var(--text); }
+
+/* ══════════════════════════════════════
+   TIME SLOTS
+══════════════════════════════════════ */
+.slots { display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:8px; }
+.slot {
+  padding:9px 6px;border-radius:9px;
+  border:1px solid var(--border2);text-align:center;
+  font-size:12px;font-weight:600;cursor:pointer;
+  transition:all .2s;color:var(--text2);
+  background:var(--glass);
+}
+.slot:hover { border-color:rgba(59,111,255,.4);color:var(--accent2);background:rgba(59,111,255,.08); }
+.slot.sel { background:linear-gradient(135deg,var(--accent),#5579FF);color:white;border-color:transparent;box-shadow:0 4px 12px var(--accent-glow); }
+.slot.na { opacity:.3;cursor:not-allowed;pointer-events:none; }
+
+/* ══════════════════════════════════════
+   CONFIRM BANNER
+══════════════════════════════════════ */
+.cbanner {
+  display:none;align-items:center;gap:16px;
+  background:linear-gradient(135deg,rgba(0,212,170,.15),rgba(59,111,255,.1));
+  border:1px solid rgba(0,212,170,.3);
+  border-radius:var(--r2);padding:20px 24px;margin-bottom:20px;
+}
+.cbanner.show { display:flex;animation:viewIn .4s ease; }
+
+/* ══════════════════════════════════════
+   DOCTOR CARD
+══════════════════════════════════════ */
+.doc-card {
+  display:flex;align-items:center;gap:14px;
+  padding:16px;border-radius:14px;
+  background:var(--glass);border:1px solid var(--border);
+  transition:border-color .2s;
+}
+.doc-card:hover { border-color:var(--border2); }
+.doc-av {
+  width:46px;height:46px;border-radius:12px;
+  background:linear-gradient(135deg,rgba(59,111,255,.3),rgba(0,212,170,.2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;flex-shrink:0;
+  border:1px solid rgba(59,111,255,.25);
+}
+.doc-name { font-family:var(--font-display);font-size:14px;font-weight:600;color:var(--text); }
+.doc-spec { font-size:11.5px;color:var(--text2);margin-top:2px; }
+
+/* ══════════════════════════════════════
+   ACTION BUTTONS
+══════════════════════════════════════ */
+.actrow { display:flex;gap:10px; }
+.actbtn {
+  flex:1;padding:14px 10px;border-radius:12px;border:none;
+  font-family:var(--font-body);font-size:12px;font-weight:700;cursor:pointer;
+  transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:6px;
+  text-transform:uppercase;letter-spacing:.3px;
+}
+.actbtn .ic { font-size:22px; }
+.actbtn.ac {
+  background:linear-gradient(135deg,var(--accent),#5579FF);
+  color:white;box-shadow:0 4px 14px var(--accent-glow);
+}
+.actbtn.ac:hover { transform:translateY(-2px);box-shadow:0 8px 20px var(--accent-glow); }
+.actbtn.gl {
+  background:var(--glass2);color:var(--text2);
+  border:1px solid var(--border2);
+}
+.actbtn.gl:hover { transform:translateY(-2px);color:var(--text);background:var(--glass); }
+.actbtn.ro { background:rgba(255,107,138,.1);color:var(--rose);border:1px solid rgba(255,107,138,.2); }
+.actbtn.ro:hover { transform:translateY(-2px);background:rgba(255,107,138,.15); }
+
+/* ══════════════════════════════════════
+   QUEUE NUMBER BIG (Live view)
+══════════════════════════════════════ */
+.now-card {
+  border-radius:var(--r2);padding:28px;
+  background:linear-gradient(135deg,rgba(59,111,255,.15),rgba(0,212,170,.08));
+  border:1px solid rgba(59,111,255,.3);
+  text-align:center;position:relative;overflow:hidden;
+}
+.now-card::before {
+  content:'NOW SERVING';
+  position:absolute;top:14px;left:50%;transform:translateX(-50%);
+  font-size:10px;font-weight:700;letter-spacing:2px;
+  color:var(--accent2);opacity:.7;
+}
+.now-num {
+  font-family:var(--font-display);font-size:80px;font-weight:700;
+  color:white;line-height:1;
+  text-shadow:0 0 60px rgba(59,111,255,.6);
+  margin-top:8px;
+}
+.now-name { font-size:14px;color:var(--text2);margin-top:6px; }
+
+/* ══════════════════════════════════════
+   CALL NEXT BTN
+══════════════════════════════════════ */
+.cnbtn {
+  width:100%;padding:16px;border-radius:14px;
+  background:linear-gradient(135deg,var(--accent),var(--teal));
+  color:white;font-size:15px;font-weight:700;
+  font-family:var(--font-display);border:none;cursor:pointer;
+  transition:all .25s;letter-spacing:.3px;
+  box-shadow:0 6px 24px rgba(59,111,255,.3);
+  margin-top:12px;
+}
+.cnbtn:hover { transform:translateY(-2px);box-shadow:0 10px 30px rgba(59,111,255,.4); }
+.cnbtn:active { transform:scale(.97); }
+
+/* ══════════════════════════════════════
+   ANALYTICS RING
+══════════════════════════════════════ */
+.metric-rings { display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:20px; }
+.mring {
+  background:var(--glass);border:1px solid var(--border);
+  border-radius:var(--r2);padding:24px;text-align:center;
+  transition:all .2s;
+}
+.mring:hover { border-color:var(--border2);transform:translateY(-2px); }
+.mring-val {
+  font-family:var(--font-display);font-size:40px;font-weight:700;
+  line-height:1;margin-bottom:6px;
+}
+.mring-val.ac { color:var(--accent2); }
+.mring-val.tc { color:var(--teal); }
+.mring-val.am { color:var(--amber); }
+.mring-lbl { font-size:12px;color:var(--text2);font-weight:500; }
+.mring-sub { font-size:11px;color:var(--text3);margin-top:4px; }
+
+/* ══════════════════════════════════════
+   INSIGHT BOX
+══════════════════════════════════════ */
+.insight {
+  background:rgba(59,111,255,.08);border:1px solid rgba(59,111,255,.2);
+  border-radius:12px;padding:14px 16px;margin-top:16px;
+  font-size:12.5px;color:var(--text2);line-height:1.5;
+}
+.insight strong { color:var(--accent2); }
+
+/* ══════════════════════════════════════
+   TABLE ACTION BTN
+══════════════════════════════════════ */
+.tbtn {
+  padding:5px 12px;border-radius:7px;font-size:11.5px;font-weight:600;
+  border:none;cursor:pointer;font-family:var(--font-body);transition:all .2s;
+}
+.tbtn-p { background:rgba(59,111,255,.15);color:var(--accent2); }
+.tbtn-p:hover { background:rgba(59,111,255,.25); }
+.tbtn-g { background:var(--glass2);color:var(--text2);border:1px solid var(--border); }
+.tbtn-g:hover { color:var(--text); }
+
+/* ══════════════════════════════════════
+   SCROLL CUSTOM
+══════════════════════════════════════ */
+::-webkit-scrollbar { width:5px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border2);border-radius:99px; }
+
+/* ══════════════════════════════════════
+   PULSE RING AROUND LOGO
+══════════════════════════════════════ */
+.logo-wrap { position:relative;margin-bottom:24px; }
+.logo-wrap::before {
+  content:'';position:absolute;inset:-6px;
+  border-radius:16px;border:1px solid rgba(59,111,255,.3);
+  animation:logoring 3s ease-in-out infinite;
+}
+@keyframes logoring {
+  0%,100%{ opacity:.4;transform:scale(1); }
+  50%{ opacity:.8;transform:scale(1.05); }
+}
+
+/* ══════════════════════════════════════
+   ANIMATED NUMBER
+══════════════════════════════════════ */
+@keyframes numIn {
+  from { opacity:0;transform:scale(.6) translateY(20px); }
+  to   { opacity:1;transform:scale(1) translateY(0); }
+}
+.numanim { animation:numIn .5s cubic-bezier(.34,1.56,.64,1) forwards; }
+
+/* success check */
+.bigcheck {
+  width:48px;height:48px;border-radius:50%;
+  background:rgba(0,212,170,.15);border:2px solid rgba(0,212,170,.4);
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;flex-shrink:0;
+}
+
+/* token row highlight */
+.me-row td { background:rgba(59,111,255,.06)!important; }
+
+/* blinking cursor effect on live number */
+@keyframes wt-tick {
+  0%,49%{opacity:1}50%,100%{opacity:.5}
+}
+.wt-live { animation:wt-tick 2s infinite; }
+
+</style>
+</head>
+<body>
+
+<!-- AMBIENT ORBS -->
+<div class="ambient">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+
+<div class="shell">
+
+  <!-- ══ SIDEBAR ══ -->
+  <nav class="sidebar">
+    <div class="logo-wrap">
+      <div class="logo" onclick="go('dash')">EQ</div>
+    </div>
+    <div class="snav">
+      <div class="si on" id="n-dash" onclick="go('dash')">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span class="tip">Dashboard</span>
+      </div>
+      <div class="si" id="n-queue" onclick="go('queue')">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+        <span class="tip">Live Queue</span>
+      </div>
+      <div class="si" id="n-book" onclick="go('book')">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        <span class="tip">Book Slot</span>
+      </div>
+      <div class="si" id="n-patient" onclick="go('patient')">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span class="tip">My Status</span>
+      </div>
+      <div class="si" id="n-analytics" onclick="go('analytics')">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 17l4-8 4 4 4-6 4 4"/><path d="M3 21h18"/></svg>
+        <span class="tip">Analytics</span>
+      </div>
+    </div>
+    <div class="sbottom">
+      <div class="si">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span class="tip">Alerts</span>
+        <span style="position:absolute;top:4px;right:4px;width:14px;height:14px;background:var(--rose);border-radius:50%;font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:700;color:white">3</span>
+      </div>
+      <div class="avatar">Dr</div>
+    </div>
+  </nav>
+
+  <!-- ══ VIEWS ══ -->
+  <div class="views">
+
+    <!-- ══════════ DASHBOARD ══════════ -->
+    <div class="view on" id="v-dash">
+      <div class="topbar">
+        <div>
+          <div class="ttitle">Clinic Dashboard</div>
+          <div class="tsub">Apollo Clinic · Sector 62, Noida · Sunday, 22 March 2026</div>
+        </div>
+        <div class="tright">
+          <div class="live-badge"><div class="live-dot"></div>Live · 12 in queue</div>
+          <button class="btn btn-p" onclick="go('book')">+ New Booking</button>
+        </div>
+      </div>
+      <div class="content">
+
+        <div class="stats">
+          <div class="scard ac">
+            <div class="scard-icon ac">👥</div>
+            <div class="scard-val">47</div>
+            <div class="scard-label">Patients Today</div>
+            <div class="scard-change up">↑ 12% vs yesterday</div>
+          </div>
+          <div class="scard tc">
+            <div class="scard-icon tc">⚡</div>
+            <div class="scard-val">18<span style="font-size:16px;font-weight:400;color:var(--text2)"> min</span></div>
+            <div class="scard-label">Avg Wait Time</div>
+            <div class="scard-change up">↓ 34% reduced</div>
+          </div>
+          <div class="scard am">
+            <div class="scard-icon am">✅</div>
+            <div class="scard-val">35</div>
+            <div class="scard-label">Consultations Done</div>
+            <div class="scard-change up">↑ 74% completion</div>
+          </div>
+          <div class="scard ro">
+            <div class="scard-icon ro">🚶</div>
+            <div class="scard-val">2</div>
+            <div class="scard-label">Walk-outs Today</div>
+            <div class="scard-change up">↓ from avg of 8</div>
+          </div>
+        </div>
+
+        <div class="g3">
+          <!-- Queue table -->
+          <div class="gcard">
+            <div class="shd">
+              <div class="stitle">Live Queue</div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <div class="tabs" style="margin:0">
+                  <button class="tab on">All</button>
+                  <button class="tab">Waiting</button>
+                  <button class="tab">Done</button>
+                </div>
+                <span class="slink" onclick="go('queue')">View all →</span>
+              </div>
+            </div>
+            <table class="qt">
+              <thead>
+                <tr><th>Token</th><th>Patient</th><th>Reason</th><th>Wait</th><th>Status</th></tr>
+              </thead>
+              <tbody id="dbq-body"></tbody>
+            </table>
+          </div>
+
+          <!-- Right col -->
+          <div class="gcol">
+            <!-- Doctor -->
+            <div class="gcard gcard-sm">
+              <div class="stitle" style="margin-bottom:14px">Doctor On Duty</div>
+              <div class="doc-card" style="border:none;background:transparent;padding:0">
+                <div class="doc-av">👨‍⚕️</div>
+                <div>
+                  <div class="doc-name">Dr. Rajiv Mehta</div>
+                  <div class="doc-spec">General Physician · MBBS, MD</div>
+                </div>
+                <div style="margin-left:auto;text-align:right">
+                  <div class="pill pill-now">Consulting</div>
+                  <div style="font-size:11px;color:var(--text3);margin-top:5px">Token #008</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick actions -->
+            <div class="gcard gcard-sm">
+              <div class="stitle" style="margin-bottom:14px">Quick Actions</div>
+              <div class="actrow">
+                <button class="actbtn ac" onclick="go('queue')">
+                  <span class="ic">📢</span>Next
+                </button>
+                <button class="actbtn gl" onclick="go('book')">
+                  <span class="ic">📅</span>Book
+                </button>
+                <button class="actbtn gl" onclick="go('analytics')">
+                  <span class="ic">📈</span>Stats
+                </button>
+              </div>
+            </div>
+
+            <!-- Hourly chart -->
+            <div class="gcard gcard-sm" style="flex:1">
+              <div class="stitle" style="margin-bottom:14px">Today's Hourly Load</div>
+              <div class="barchart">
+                <div class="brow"><div class="blbl" style="width:36px;text-align:left;font-size:10px">9am</div><div class="btrack"><div class="bfill" style="width:30%"></div></div><div class="bval">6</div></div>
+                <div class="brow"><div class="blbl" style="width:36px;text-align:left;font-size:10px">10am</div><div class="btrack"><div class="bfill" style="width:75%"></div></div><div class="bval">15</div></div>
+                <div class="brow"><div class="blbl" style="width:36px;text-align:left;font-size:10px">11am</div><div class="btrack"><div class="bfill" style="width:90%"></div></div><div class="bval">18</div></div>
+                <div class="brow"><div class="blbl" style="width:36px;text-align:left;font-size:10px">12pm</div><div class="btrack"><div class="bfill" style="width:55%"></div></div><div class="bval">11</div></div>
+                <div class="brow"><div class="blbl" style="width:36px;text-align:left;font-size:10px">1pm</div><div class="btrack"><div class="bfill" style="width:20%"></div></div><div class="bval">4</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ LIVE QUEUE ══════════ -->
+    <div class="view" id="v-queue">
+      <div class="topbar">
+        <div>
+          <div class="ttitle">Live Queue</div>
+          <div class="tsub">Real-time token management · Tap "Call Next" to advance</div>
+        </div>
+        <div class="tright">
+          <div class="live-badge"><div class="live-dot"></div>Dr. Mehta is active</div>
+          <button class="btn btn-g">+ Walk-in</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="g3" style="margin-bottom:16px;align-items:start">
+          <!-- Current token -->
+          <div class="gcard">
+            <div class="shd">
+              <div class="stitle">Today's Full Queue</div>
+              <div class="tabs" style="margin:0">
+                <button class="tab on">All</button>
+                <button class="tab">Active</button>
+                <button class="tab">Done</button>
+              </div>
+            </div>
+            <table class="qt">
+              <thead>
+                <tr><th>Token</th><th>Patient</th><th>Reason</th><th>Wait</th><th>Status</th><th></th></tr>
+              </thead>
+              <tbody id="fq-body"></tbody>
+            </table>
+          </div>
+
+          <div class="gcol">
+            <div class="now-card">
+              <div class="now-num" id="now-num">008</div>
+              <div class="now-name" id="now-name">Neha Verma</div>
+            </div>
+
+            <div class="gcard gcard-sm" style="text-align:center">
+              <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;font-weight:700;margin-bottom:8px">Next Up</div>
+              <div style="font-family:var(--font-display);font-size:48px;font-weight:700;color:var(--text2)" id="next-disp">009</div>
+              <div style="font-size:12px;color:var(--text3)" id="next-name-disp">Arun Mehta</div>
+              <button class="cnbtn" onclick="callNext()">Call Next Patient →</button>
+            </div>
+
+            <div class="gcard gcard-sm">
+              <div class="stitle" style="margin-bottom:12px">Queue Stats</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div style="background:var(--glass2);border-radius:10px;padding:12px;text-align:center">
+                  <div style="font-family:var(--font-display);font-size:24px;font-weight:700;color:var(--teal)" id="remaining-count">7</div>
+                  <div style="font-size:11px;color:var(--text3);margin-top:2px">Remaining</div>
+                </div>
+                <div style="background:var(--glass2);border-radius:10px;padding:12px;text-align:center">
+                  <div style="font-family:var(--font-display);font-size:24px;font-weight:700;color:var(--accent2)">8</div>
+                  <div style="font-size:11px;color:var(--text3);margin-top:2px">Avg Min/Patient</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ BOOKING ══════════ -->
+    <div class="view" id="v-book">
+      <div class="topbar">
+        <div>
+          <div class="ttitle">Book Appointment</div>
+          <div class="tsub">Reserve your slot · Skip the physical queue entirely</div>
+        </div>
+      </div>
+      <div class="content">
+
+        <div class="cbanner" id="bsuccess">
+          <div class="bigcheck">✅</div>
+          <div>
+            <div style="font-family:var(--font-display);font-size:17px;font-weight:600;color:var(--teal)">Appointment Confirmed!</div>
+            <div style="font-size:13px;color:var(--text2);margin-top:3px">Token <strong style="color:var(--text)">#016</strong> · You'll get a notification 5 patients before your turn.</div>
+          </div>
+          <button class="btn btn-p" style="margin-left:auto;flex-shrink:0" onclick="go('patient')">Track My Status →</button>
+        </div>
+
+        <div class="g2">
+          <!-- Form -->
+          <div class="gcard">
+            <div class="stitle" style="margin-bottom:20px">Patient Information</div>
+            <div class="fgrow">
+              <div class="fg">
+                <label class="flbl">First Name</label>
+                <input class="finput" placeholder="Rohit" id="f-fname">
+              </div>
+              <div class="fg">
+                <label class="flbl">Last Name</label>
+                <input class="finput" placeholder="Sharma">
+              </div>
+            </div>
+            <div class="fgrow">
+              <div class="fg">
+                <label class="flbl">Phone Number</label>
+                <input class="finput" placeholder="+91 98765 43210">
+              </div>
+              <div class="fg">
+                <label class="flbl">Age</label>
+                <input class="finput" type="number" placeholder="45">
+              </div>
+            </div>
+            <div class="fg">
+              <label class="flbl">Reason for Visit</label>
+              <select class="fsel">
+                <option>General Checkup</option>
+                <option>Follow-up Consultation</option>
+                <option>Lab Report Review</option>
+                <option>Fever / Cold / Cough</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="fgrow">
+              <div class="fg">
+                <label class="flbl">Date</label>
+                <input class="finput" type="date" value="2026-03-22">
+              </div>
+              <div class="fg">
+                <label class="flbl">Visit Type</label>
+                <select class="fsel">
+                  <option>In-person</option>
+                  <option>Follow-up</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slots + confirm -->
+          <div class="gcol">
+            <div class="gcard">
+              <div class="stitle" style="margin-bottom:16px">Select Time Slot</div>
+              <div style="margin-bottom:14px">
+                <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;font-weight:700;margin-bottom:8px">Morning</div>
+                <div class="slots">
+                  <div class="slot" onclick="pickSlot(this)">9:00</div>
+                  <div class="slot na">9:20</div>
+                  <div class="slot" onclick="pickSlot(this)">9:40</div>
+                  <div class="slot na">10:00</div>
+                  <div class="slot sel" onclick="pickSlot(this)">10:20</div>
+                  <div class="slot" onclick="pickSlot(this)">10:40</div>
+                  <div class="slot" onclick="pickSlot(this)">11:00</div>
+                  <div class="slot na">11:20</div>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;font-weight:700;margin-bottom:8px">Afternoon</div>
+                <div class="slots">
+                  <div class="slot" onclick="pickSlot(this)">2:00</div>
+                  <div class="slot" onclick="pickSlot(this)">2:30</div>
+                  <div class="slot na">3:00</div>
+                  <div class="slot" onclick="pickSlot(this)">3:30</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:14px;margin-top:12px;font-size:11.5px;color:var(--text3)">
+                <span style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:2px;background:rgba(59,111,255,.4);display:inline-block"></span>Available</span>
+                <span style="display:flex;align-items:center;gap:5px;opacity:.5"><span style="width:8px;height:8px;border-radius:2px;background:var(--text3);display:inline-block"></span>Taken</span>
+                <span style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:2px;background:var(--accent);display:inline-block"></span>Selected</span>
+              </div>
+            </div>
+
+            <div class="gcard gcard-sm">
+              <div class="stitle" style="margin-bottom:12px">Doctor Available</div>
+              <div class="doc-card" style="margin-bottom:16px">
+                <div class="doc-av">👨‍⚕️</div>
+                <div>
+                  <div class="doc-name">Dr. Rajiv Mehta</div>
+                  <div class="doc-spec">General Physician</div>
+                </div>
+                <div class="pill pill-done" style="margin-left:auto">Available</div>
+              </div>
+              <button class="btn btn-p" style="width:100%;padding:14px;font-size:14px;border-radius:12px;font-family:var(--font-display);letter-spacing:.3px" onclick="confirmBook()">
+                Confirm Booking →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ PATIENT VIEW ══════════ -->
+    <div class="view" id="v-patient">
+      <div class="topbar">
+        <div>
+          <div class="ttitle">My Queue Status</div>
+          <div class="tsub">Apollo Clinic · Token #013 · Booked for 10:20 AM</div>
+        </div>
+        <div class="tright">
+          <button class="btn btn-g">📤 Share Status</button>
+        </div>
+      </div>
+      <div class="content">
+
+        <!-- HERO -->
+        <div class="phero">
+          <div class="phero-mesh"></div>
+          <div class="phero-content">
+            <div>
+              <div class="qnum">
+                <small>Your Token</small>
+                013
+              </div>
+            </div>
+            <div class="qbadges">
+              <div class="qbadge">
+                <div class="lbl">Position</div>
+                <div class="val wt-live">5th</div>
+              </div>
+              <div class="qbadge">
+                <div class="lbl">Est. Wait</div>
+                <div class="val" id="wt-val">~40 min</div>
+              </div>
+              <div class="qbadge">
+                <div class="lbl">Your Slot</div>
+                <div class="val">10:20 AM</div>
+              </div>
+              <div class="qbadge">
+                <div class="lbl">Doctor</div>
+                <div class="val">Dr. Mehta</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- JOURNEY -->
+        <div class="journey">
+          <div class="jstep done"><div class="jdot">✓</div><div class="jlbl">Booked</div></div>
+          <div class="jstep done"><div class="jdot">✓</div><div class="jlbl">Confirmed</div></div>
+          <div class="jstep active"><div class="jdot">⏳</div><div class="jlbl">Queued</div></div>
+          <div class="jstep"><div class="jdot">🔔</div><div class="jlbl">Alert</div></div>
+          <div class="jstep"><div class="jdot">🩺</div><div class="jlbl">Consulting</div></div>
+          <div class="jstep"><div class="jdot">✅</div><div class="jlbl">Done</div></div>
+        </div>
+
+        <div class="g2">
+          <!-- Nearby -->
+          <div class="gcard">
+            <div class="stitle" style="margin-bottom:14px">Queue Around You</div>
+            <div class="nearby" id="nearby-list"></div>
+          </div>
+
+          <!-- Notifs -->
+          <div class="gcard">
+            <div class="stitle" style="margin-bottom:14px">Live Notifications</div>
+            <div class="notifs">
+              <div class="nnotif ac">
+                <div class="nnotif-icon ac">✅</div>
+                <div style="flex:1"><div class="nnotif-title">Booking Confirmed</div><div class="nnotif-desc">Token #013 assigned · 10:20 AM slot</div></div>
+                <div class="nnotif-time">10:05</div>
+              </div>
+              <div class="nnotif am">
+                <div class="nnotif-icon am">⚠️</div>
+                <div style="flex:1"><div class="nnotif-title">Doctor Running Late</div><div class="nnotif-desc">Dr. Mehta is ~10 min behind schedule today</div></div>
+                <div class="nnotif-time">10:12</div>
+              </div>
+              <div class="nnotif tc">
+                <div class="nnotif-icon tc">🔔</div>
+                <div style="flex:1"><div class="nnotif-title">5 Patients Ahead</div><div class="nnotif-desc">You can head to clinic now — ~40 min wait</div></div>
+                <div class="nnotif-time">10:40</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="gcard" style="margin-top:16px">
+          <div class="stitle" style="margin-bottom:14px">Actions</div>
+          <div class="actrow">
+            <button class="actbtn gl"><span class="ic">📞</span>Call Clinic</button>
+            <button class="actbtn gl"><span class="ic">🔄</span>Reschedule</button>
+            <button class="actbtn ro"><span class="ic">❌</span>Cancel</button>
+            <button class="actbtn ac"><span class="ic">📤</span>Share</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ ANALYTICS ══════════ -->
+    <div class="view" id="v-analytics">
+      <div class="topbar">
+        <div>
+          <div class="ttitle">Analytics</div>
+          <div class="tsub">Performance insights · Apollo Clinic · March 2026</div>
+        </div>
+        <div class="tright">
+          <select class="fsel" style="font-size:12px;padding:8px 12px">
+            <option>Last 7 days</option>
+            <option>Last 30 days</option>
+            <option>This month</option>
+          </select>
+        </div>
+      </div>
+      <div class="content">
+
+        <div class="stats">
+          <div class="scard ac">
+            <div class="scard-icon ac">📅</div>
+            <div class="scard-val">328</div>
+            <div class="scard-label">Total Patients (Month)</div>
+            <div class="scard-change up">↑ 24% vs last month</div>
+          </div>
+          <div class="scard tc">
+            <div class="scard-icon tc">⭐</div>
+            <div class="scard-val">4.8</div>
+            <div class="scard-label">Avg Patient Rating</div>
+            <div class="scard-change up">↑ from 4.2 last month</div>
+          </div>
+          <div class="scard am">
+            <div class="scard-icon am">⏱️</div>
+            <div class="scard-val">18m</div>
+            <div class="scard-label">Avg Wait Time</div>
+            <div class="scard-change up">↓ 34% reduction</div>
+          </div>
+          <div class="scard ro">
+            <div class="scard-icon ro">📈</div>
+            <div class="scard-val">96%</div>
+            <div class="scard-label">Patient Retention</div>
+            <div class="scard-change up">↑ from 78%</div>
+          </div>
+        </div>
+
+        <div class="g2" style="margin-bottom:16px">
+          <div class="gcard">
+            <div class="stitle" style="margin-bottom:16px">Daily Patient Volume</div>
+            <div class="barchart">
+              <div class="brow"><div class="blbl" style="width:32px;text-align:left;font-size:10px">Mon</div><div class="btrack"><div class="bfill" style="width:55%"></div></div><div class="bval">42</div></div>
+              <div class="brow"><div class="blbl" style="width:32px;text-align:left;font-size:10px">Tue</div><div class="btrack"><div class="bfill" style="width:70%"></div></div><div class="bval">54</div></div>
+              <div class="brow"><div class="blbl" style="width:32px;text-align:left;font-size:10px">Wed</div><div class="btrack"><div class="bfill" style="width:90%"></div></div><div class="bval">68</div></div>
+              <div class="brow"><div class="blbl" style="width:32px;text-align:left;font-size:10px">Thu</div><div class="btrack"><div class="bfill" style="width:65%"></div></div><div class="bval">49</div></div>
+              <div class="brow"><div class="blbl" style="width:32px;text-align:left;font-size:10px">Fri</div><div class="btrack"><div class="bfill" style="width:80%"></div></div><div class="bval">61</div></div>
+              <div class="brow"><div class="blbl" style="width:32px;text-align:left;font-size:10px">Sat</div><div class="btrack"><div class="bfill" style="width:100%"></div></div><div class="bval">76</div></div>
+              <div class="brow"><div class="blbl" style="width:32px;text-align:left;font-size:10px">Sun</div><div class="btrack"><div class="bfill" style="width:40%"></div></div><div class="bval">31</div></div>
+            </div>
+            <div class="insight">💡 <strong>Saturday</strong> is your busiest day — consider extending hours or adding a second doctor to prevent walk-outs.</div>
+          </div>
+
+          <div class="gcard">
+            <div class="stitle" style="margin-bottom:16px">Visit Reasons</div>
+            <div class="barchart">
+              <div class="brow"><div class="blbl" style="width:68px;text-align:left;font-size:10.5px">Checkup</div><div class="btrack"><div class="bfill" style="width:65%"></div></div><div class="bval">38%</div></div>
+              <div class="brow"><div class="blbl" style="width:68px;text-align:left;font-size:10.5px">Follow-up</div><div class="btrack"><div class="bfill" style="width:40%"></div></div><div class="bval">24%</div></div>
+              <div class="brow"><div class="blbl" style="width:68px;text-align:left;font-size:10.5px">Fever/Cold</div><div class="btrack"><div class="bfill" style="width:32%"></div></div><div class="bval">19%</div></div>
+              <div class="brow"><div class="blbl" style="width:68px;text-align:left;font-size:10.5px">Lab Report</div><div class="btrack"><div class="bfill" style="width:22%"></div></div><div class="bval">13%</div></div>
+              <div class="brow"><div class="blbl" style="width:68px;text-align:left;font-size:10.5px">Other</div><div class="btrack"><div class="bfill" style="width:10%"></div></div><div class="bval">6%</div></div>
+            </div>
+            <div class="insight">💡 <strong>General Checkup</strong> drives 38% of visits. Pre-screening could reduce consultation time by 3–4 min per patient.</div>
+          </div>
+        </div>
+
+        <div class="gcard">
+          <div class="stitle" style="margin-bottom:20px">EASY-Q Impact Metrics — This Month</div>
+          <div class="metric-rings">
+            <div class="mring">
+              <div class="mring-val ac">47h</div>
+              <div class="mring-lbl">Patient Time Saved</div>
+              <div class="mring-sub">Collective hours recovered</div>
+            </div>
+            <div class="mring">
+              <div class="mring-val tc">92%</div>
+              <div class="mring-lbl">Walk-out Prevention</div>
+              <div class="mring-sub">vs 62% before EASY-Q</div>
+            </div>
+            <div class="mring">
+              <div class="mring-val am">₹28k</div>
+              <div class="mring-lbl">Revenue Protected</div>
+              <div class="mring-sub">Consultations not lost</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /views -->
+</div><!-- /shell -->
+
+<script>
+// ═══════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════
+const Q = [
+  { t:'001', n:'Anjali Sharma', r:'Checkup',     w:0,  s:'done' },
+  { t:'002', n:'Ravi Kumar',    r:'Follow-up',   w:0,  s:'done' },
+  { t:'003', n:'Meera Patel',   r:'Fever',       w:0,  s:'done' },
+  { t:'004', n:'Suresh Nair',   r:'Lab Report',  w:0,  s:'done' },
+  { t:'005', n:'Priya Singh',   r:'Checkup',     w:0,  s:'done' },
+  { t:'006', n:'Kiran Rao',     r:'Follow-up',   w:0,  s:'done' },
+  { t:'007', n:'Deepak Joshi',  r:'Cough/Cold',  w:0,  s:'done' },
+  { t:'008', n:'Neha Verma',    r:'Checkup',     w:8,  s:'now'  },
+  { t:'009', n:'Arun Mehta',    r:'Follow-up',   w:16, s:'wait' },
+  { t:'010', n:'Sunita Gupta',  r:'Lab Review',  w:24, s:'wait' },
+  { t:'011', n:'Vikram Shah',   r:'Checkup',     w:32, s:'wait' },
+  { t:'012', n:'Rekha Iyer',    r:'Fever',       w:40, s:'wait' },
+  { t:'013', n:'You',           r:'Checkup',     w:48, s:'wait' },
+  { t:'014', n:'Mohan Das',     r:'Follow-up',   w:56, s:'wait' },
+  { t:'015', n:'Kavita Sinha',  r:'Checkup',     w:64, s:'wait' },
+];
+
+function pillHtml(s) {
+  if (s==='done') return '<span class="pill pill-done">Done</span>';
+  if (s==='now')  return '<span class="pill pill-now">In Progress</span>';
+  if (s==='wait') return '<span class="pill pill-wait">Waiting</span>';
+  return '<span class="pill pill-skip">Skipped</span>';
+}
+
+// ═══════════════════════════════════════
+//  RENDER DASHBOARD QUEUE
+// ═══════════════════════════════════════
+function renderDBQ() {
+  const rows = Q.filter(p=>p.s!=='done').slice(0,7);
+  document.getElementById('dbq-body').innerHTML = rows.map(p=>`
+    <tr>
+      <td><span class="tok">#${p.t}</span></td>
+      <td style="font-weight:500;color:var(--text)">${p.n}</td>
+      <td style="color:var(--text2)">${p.r}</td>
+      <td style="color:var(--text2)">${p.w>0?p.w+'m':'—'}</td>
+      <td>${pillHtml(p.s)}</td>
+    </tr>`).join('');
+}
+
+// ═══════════════════════════════════════
+//  RENDER FULL QUEUE
+// ═══════════════════════════════════════
+function renderFQ() {
+  document.getElementById('fq-body').innerHTML = Q.map(p=>`
+    <tr class="${p.t==='013'?'me-row':''}">
+      <td><span class="tok">#${p.t}</span></td>
+      <td style="font-weight:${p.t==='013'?'700':'500'};color:${p.t==='013'?'var(--text)':'var(--text2)'}">${p.n}</td>
+      <td style="color:var(--text2);font-size:12px">${p.r}</td>
+      <td style="color:var(--text2)">${p.w>0?p.w+'m':'—'}</td>
+      <td>${pillHtml(p.s)}</td>
+      <td>
+        ${p.s==='wait'?`<button class="tbtn tbtn-p" onclick="markDone('${p.t}')">Complete</button>`:''}
+        ${p.s==='now'?`<button class="tbtn tbtn-g" onclick="markDone('${p.t}')">Finish</button>`:''}
+      </td>
+    </tr>`).join('');
+  // update remaining
+  const rem = Q.filter(p=>p.s==='wait'||p.s==='now').length;
+  const rc = document.getElementById('remaining-count');
+  if(rc) rc.textContent = rem;
+}
+
+// ═══════════════════════════════════════
+//  RENDER NEARBY
+// ═══════════════════════════════════════
+function renderNearby() {
+  const list = Q.filter(p=>parseInt(p.t)>=8&&parseInt(p.t)<=16);
+  document.getElementById('nearby-list').innerHTML = list.map(p=>`
+    <div class="nitem ${p.t==='013'?'me':''}">
+      <div class="nnum">${p.t}</div>
+      <div class="nname">${p.n}</div>
+      <div class="nwait">
+        ${p.s==='now'?pillHtml('now'):p.s==='done'?'<span style="color:var(--teal);font-size:12px">✓ Done</span>':'<span style="color:var(--text3)">~'+p.w+'m</span>'}
+      </div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════
+//  CALL NEXT
+// ═══════════════════════════════════════
+function callNext() {
+  const cur = Q.find(p=>p.s==='now');
+  if(cur) cur.s='done';
+  const nxt = Q.find(p=>p.s==='wait');
+  if(nxt) {
+    nxt.s='now'; nxt.w=0;
+    const nn = document.getElementById('now-num');
+    const nm = document.getElementById('now-name');
+    if(nn) { nn.classList.remove('numanim'); void nn.offsetWidth; nn.classList.add('numanim'); nn.textContent=nxt.t; }
+    if(nm) nm.textContent=nxt.n;
+    const nf = Q.find(p=>p.s==='wait');
+    const nd = document.getElementById('next-disp');
+    const nd2 = document.getElementById('next-name-disp');
+    if(nd&&nf) nd.textContent=nf.t;
+    if(nd2&&nf) nd2.textContent=nf.n;
+  }
+  renderDBQ(); renderFQ(); renderNearby();
+}
+
+function markDone(tok) {
+  const p = Q.find(q=>q.t===tok);
+  if(p) { p.s='done'; p.w=0; }
+  renderDBQ(); renderFQ(); renderNearby();
+}
+
+// ═══════════════════════════════════════
+//  BOOKING
+// ═══════════════════════════════════════
+function pickSlot(el) {
+  document.querySelectorAll('.slot.sel').forEach(s=>s.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function confirmBook() {
+  const b = document.getElementById('bsuccess');
+  b.classList.add('show');
+  b.scrollIntoView({behavior:'smooth'});
+}
+
+// ═══════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════
+const viewMap = {
+  dash:'v-dash', queue:'v-queue', book:'v-book', patient:'v-patient', analytics:'v-analytics'
+};
+const navMap = {
+  dash:'n-dash', queue:'n-queue', book:'n-book', patient:'n-patient', analytics:'n-analytics'
+};
+
+function go(name) {
+  Object.values(viewMap).forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('on'); });
+  Object.values(navMap).forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('on'); });
+  const v=document.getElementById(viewMap[name]);
+  const n=document.getElementById(navMap[name]);
+  if(v) v.classList.add('on');
+  if(n) n.classList.add('on');
+}
+
+// ═══════════════════════════════════════
+//  LIVE COUNTDOWN
+// ═══════════════════════════════════════
+let wt = 40;
+setInterval(()=>{
+  if(wt>1){ wt--;
+    const el=document.getElementById('wt-val');
+    if(el) el.textContent='~'+wt+' min';
+  }
+},9000);
+
+// ═══════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════
+renderDBQ(); renderFQ(); renderNearby();
+</script>
+</body>
+</html>
